@@ -9,13 +9,11 @@ const CounterContext = React.createContext();
 const counterReducer = (state, action) => {
   switch (action.type) {
     case 'SET':
-      return { ...state, count: action.count };
-    case 'SET_MY_COUNT':
-      return { ...state, myCount: action.myCount };
+      return { count: action.count , myCount: action.myCount};  
     case 'INCREMENT':
-      return { ...state, count: state.count + 1 };
+      return { ...state,count: state.count + 1 };
     case 'DECREMENT':
-      return { ...state, count: state.count - 1 };
+      return { ...state,count: state.count - 1 };
     case 'INCREMENT_MY_COUNT':
       return { ...state, myCount: state.myCount + 1 };
     case 'DECREMENT_MY_COUNT':
@@ -31,8 +29,9 @@ const Home = () => {
   return (
     <div>
       <h1>Counter Value: {state.count}</h1>
-      <h1>My Counter Value: {state.myCount}</h1>
-      <Link to="/counter">Counter</Link>
+      <h1>myCounter Value: {state.myCount}</h1>
+      <Link to="/counter">Counter</Link><br></br>
+      <Link to="/MyCounter">myCounter</Link>
     </div>
   );
 };
@@ -44,8 +43,7 @@ const Counter = () => {
   const fetchCounter = useCallback(async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/counter');
-      dispatch({ type: 'SET', count: response.data.count });
-      dispatch({ type: 'SET_MY_COUNT', myCount: response.data.myCount });
+      dispatch({ type: 'SET', count: response.data.count , myCount: response.data.myCount });
     } catch (err) {
       console.error(err);
     }
@@ -72,7 +70,36 @@ const Counter = () => {
       console.error(err);
     }
   }, [dispatch]);
+  
 
+  return (
+    <div>
+      <h2>Counter</h2>
+      <p>Count: {state.count}</p>
+      <button onClick={incrementCounter}>Increment Count</button>
+      <button onClick={decrementCounter}>Decrement Count</button>
+      <button onClick={() => navigate('/')}>Go to Home</button>
+    </div>
+  );
+};
+const MyCounter = () => {
+  const { state, dispatch } = useContext(CounterContext);
+  const navigate = useNavigate();
+
+  const fetchCounter = useCallback(async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/counter');
+      dispatch({ type: 'SET', count: response.data.count , myCount: response.data.myCount });
+    } catch (err) {
+      console.error(err);
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    fetchCounter();
+  }, [fetchCounter]);
+
+  
   const incrementMyCount = useCallback(async () => {
     try {
       await axios.post('http://localhost:5000/api/counter/incrementMyCount');
@@ -93,23 +120,35 @@ const Counter = () => {
 
   return (
     <div>
-      <h2>Counter</h2>
-      <p>Count: {state.count}</p>
-      <button onClick={incrementCounter}>Increment</button>
-      <button onClick={decrementCounter}>Decrement</button>
-      <button onClick={() => navigate('/')}>Go to Home</button>
-
-      <h2>My Counter</h2>
-      <p>Count: {state.myCount}</p>
+      <h2>myCounter</h2>
+      <p>MyCount: {state.myCount}</p>
+      
       <button onClick={incrementMyCount}>Increment MyCount</button>
       <button onClick={decrementMyCount}>Decrement MyCount</button>
       <button onClick={() => navigate('/')}>Go to Home</button>
     </div>
   );
 };
-
 const App = () => {
-  const [state, dispatch] = useReducer(counterReducer, { count: 0, myCount: 0 });
+  const [state, dispatch] = useReducer(counterReducer, { count: null, myCount: null });
+
+  useEffect(() => {
+    const fetchInitialValues = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/counter');
+        dispatch({ type: 'SET', count: response.data.count, myCount: response.data.myCount });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchInitialValues();
+  }, []);
+
+  // Render loading state while fetching initial values
+  if (state.count === null || state.myCount === null) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <CounterContext.Provider value={{ state, dispatch }}>
@@ -123,17 +162,22 @@ const App = () => {
               <li>
                 <Link to="/counter">Counter</Link>
               </li>
+              <li>
+                <Link to="/myCounter">myCounter</Link>
+              </li>
             </ul>
           </nav>
 
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/counter" element={<Counter />} />
+            <Route path="/myCounter" element={<MyCounter />} />
           </Routes>
         </div>
       </Router>
     </CounterContext.Provider>
   );
 };
+
 
 export default App;

@@ -10,24 +10,22 @@ app.use(express.json());
 app.use(cors());
 
 // MongoDB Connection
-mongoose.connect('mongodb+srv://bert_user:bert_123@cluster0.dqgunlh.mongodb.net/mernchallenge')
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('Error connecting to MongoDB:', err));
+mongoose.connect('mongodb+srv://bert_user:bert_123@cluster0.dqgunlh.mongodb.net/counter')
+.then(() => console.log('Connected to MongoDB'))
+.catch(err => console.error('Error connecting to MongoDB:', err));
 
 // Define counter schema and model
 const counterSchema = new mongoose.Schema({
     count: { type: Number, default: 0 },
-    myCount: { type: Number, default: 0 }
-}, { collection: 'counters' });
+    myCount: { type: Number, default: 0 } //new counter var
+},{ collection: 'counters' });
 const Counter = mongoose.model('Counter', counterSchema);
-
-
 
 // Routes
 app.get('/api/counter', async (req, res) => {
     console.log("Reached GET method")
     try {
-
+        
         const counter = await Counter.findOne();
         console.log(counter);
         res.json(counter);
@@ -52,13 +50,13 @@ app.post('/api/counter/increment', async (req, res) => {
     }
 });
 
-app.post('/api/counter/decrement', async (req, res) => {
+app.post('/api/counter/incrementMyCount', async (req, res) => {
     try {
         let counter = await Counter.findOne();
         if (!counter) {
             counter = new Counter();
         }
-        counter.count--;
+        counter.myCount++;
         await counter.save();
         res.json(counter);
     } catch (err) {
@@ -67,14 +65,13 @@ app.post('/api/counter/decrement', async (req, res) => {
     }
 });
 
-
-app.post('/api/counter/incrementMyCount', async (req, res) => {
+app.post('/api/counter/decrement', async (req, res) => {
     try {
         let counter = await Counter.findOne();
         if (!counter) {
             counter = new Counter();
         }
-        counter.myCount++;
+        counter.count--;
         await counter.save();
         res.json(counter);
     } catch (err) {
@@ -101,3 +98,4 @@ app.post('/api/counter/decrementMyCount', async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+
